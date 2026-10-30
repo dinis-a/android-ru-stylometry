@@ -1,0 +1,40 @@
+# GitHub gets only what building the APK (and the tests the CI runs first) needs.
+# Everything below stays on the developer's machine.
+
+# Not needed to build: the Colab notebook that trained the model, local helpers, the docs
+/finetune_android.ipynb
+/Makefile
+/README.md
+/tools/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Flet / Flutter build output
+build/
+.build/
+android/
+
+# Env / config
+.env
+.venv
+venv/
+
+# IDE and assistants
+.idea/
+.vscode/
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Android signing keys: never commit
+*.jks
+*.keystore
+
+# APKs downloaded from the CI
+apk/
+*.apk

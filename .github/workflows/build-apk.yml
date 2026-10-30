@@ -1,0 +1,124 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "Makefile"
+      - ".gitignore"
+  workflow_dispatch:
+
+# a newer push replaces a build that is still running
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # flet 1.0.4 requires exactly Flutter 3.44.8 (flet.version.flutter_version): bump both together,
+  # and the flet pin in pyproject.toml with them
+  FLET_VERSION: "1.0.4"
+  FLUTTER_VERSION: "3.44.8"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # the packages the tests import; `flet build` brings its own for the phone
+      - name: Install flet and the packages of the tests
+        run: >
+          pip install "flet==${{ env.FLET_VERSION }}" numpy onnxruntime tokenizers
+          "pymorphy3==2.0.6" "pymorphy3-dicts-ru==2.4.417150.4580142"
+
+      # fail fast: the tests take seconds, the build takes many minutes
+      - name: Run tests
+        run: python run_tests.py
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Every release must be signed with the same certificate: Android refuses an update signed with another
+      # one, and a store ties the app to its certificate. Without the secrets the APK gets a throwaway debug
+      # key (a new one on every run), which is fine for testing but cannot be updated or published.
+      # Create the key once (keytool comes with the JDK) and put it into the repository secrets:
+      #   keytool -genkeypair -v -keystore release.jks -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+      #   base64 -w0 release.jks | gh secret set ANDROID_KEYSTORE_BASE64 --repo OWNER/REPO
+      #   gh secret set ANDROID_KEYSTORE_PASSWORD --repo OWNER/REPO
+      # Optional secrets: ANDROID_KEY_ALIAS (if it is not "upload"), ANDROID_KEY_PASSWORD (if it differs from the
+      # password of the keystore). Keep release.jks and its password safe: without them the app cannot be updated.
+      - name: Prepare signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "FLET_ANDROID_SIGNING_KEY_STORE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+            echo "Signing with the release key"
+          else
+            echo "::warning::ANDROID_KEYSTORE_BASE64 is not set: the APK is signed with a debug key and cannot be published"
+          fi
+
+      # CPU architecture, excluded files, app name and package id come from pyproject.toml
+      # (--arch / --exclude flags here would override it).
+      # --build-number becomes versionCode, which has to grow with every release.
+      # Signing settings are exported only for a signed build (an unset secret arrives as an empty string,
+      # which is not the same as an unset variable). Only ANDROID_KEYSTORE_PASSWORD is required: the key
+      # password defaults to it (same for PKCS12) and the alias to "upload", as in the keytool command above.
+      - name: Build APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -n "$FLET_ANDROID_SIGNING_KEY_STORE" ]; then
+            if [ -z "$KEYSTORE_PASSWORD" ]; then
+              echo "::error::ANDROID_KEYSTORE_PASSWORD is not set"
+              exit 1
+            fi
+            export FLET_ANDROID_SIGNING_KEY_STORE_PASSWORD="$KEYSTORE_PASSWORD"
+            export FLET_ANDROID_SIGNING_KEY_PASSWORD="${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
+            export FLET_ANDROID_SIGNING_KEY_ALIAS="${KEY_ALIAS:-upload}"
+            # a wrong password or alias fails here in seconds instead of after the whole build;
+            # on success the log shows the (public) certificate fingerprint the APK will be signed with
+            keytool -list -keystore "$FLET_ANDROID_SIGNING_KEY_STORE" \
+              -storepass:env FLET_ANDROID_SIGNING_KEY_STORE_PASSWORD \
+              -alias "$FLET_ANDROID_SIGNING_KEY_ALIAS" || {
+              echo "::error::keystore password or alias do not match the keystore (secrets ANDROID_KEYSTORE_PASSWORD / ANDROID_KEY_ALIAS)"
+              exit 1
+            }
+          fi
+          flet build apk --yes --build-number ${{ github.run_number }}
+
+      - name: Find APK
+        id: find_apk
+        run: |
+          APK=$(find build -name "*.apk" | head -n 1)
+          ls -lh "$APK"
+          echo "apk_path=$APK" >> $GITHUB_OUTPUT
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-text-check-android
+          path: ${{ steps.find_apk.outputs.apk_path }}
+          if-no-files-found: error

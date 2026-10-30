@@ -1,0 +1,65 @@
+{
+  "format": 1,
+  "labels": [
+    "human",
+    "ai"
+  ],
+  "threshold": 0.5,
+  "max_len": 256,
+  "char_limit": 3072,
+  "base_model": "cointegrated/rubert-tiny2",
+  "embeddings": "int8, one scale per row",
+  "onnx": {
+    "exporter": "classic",
+    "ir_version": 8,
+    "opset": 17
+  },
+  "dataset": {
+    "name": "iitolstykh/LLMTrace_classification",
+    "revision": "252e21e3dca713bc82bc3c1ef73bf533d7c9fc7e",
+    "language": "ru"
+  },
+  "training": {
+    "seed": 0,
+    "learning_rate": 0.0001,
+    "n_train": null,
+    "n_valid": 10000,
+    "n_test": null,
+    "epochs": 2,
+    "max_len": 256,
+    "batch_size": 32
+  },
+  "test_metrics": {
+    "n": 52521,
+    "accuracy": 0.9417185506749681,
+    "macro_f1": 0.9391849713067819,
+    "auc": 0.9879407606016029,
+    "recall_ai": 0.9673996913580247,
+    "recall_human": 0.9044217210627072,
+    "by_genre": {
+      "article": 0.9376195943360123,
+      "factual": 0.9117483296213809,
+      "news": 0.922952744349868,
+      "poetry": 0.9441244239631337,
+      "question": 0.9597495527728086,
+      "review": 0.9568463491115424,
+      "short_form": 0.9426086956521739,
+      "story": 0.9441150311295583
+    }
+  },
+  "built_with": {
+    "torch": "2.11.0+cu130",
+    "transformers": "5.20.2",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.27.0"
+  },
+  "export_check": {
+    "encoder_max_logit_diff": 3.337860107421875e-06,
+    "texts": 300,
+    "same_tokens": 300,
+    "max_abs_diff": 0.03609,
+    "mean_abs_diff": 0.000594,
+    "same_decision": 1.0,
+    "ms_per_text": 19.4
+  }
+}

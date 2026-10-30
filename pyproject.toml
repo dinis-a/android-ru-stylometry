@@ -1,0 +1,36 @@
+# Settings for `flet build` (used by both CI and local builds).
+# Reference: https://flet.dev/docs/publish/
+
+[project]
+name = "ai-text-check"
+version = "0.2.0"  # version name shown to users (the About page); the build number comes from CI
+dependencies = [
+    "flet==1.0.4",  # the same as FLET_VERSION in .github/workflows/build-apk.yml
+    "numpy",
+    "onnxruntime",
+    "tokenizers",
+    # morphology for the stylometric features: pure Python, the versions the reference values of
+    # tests/fixtures were made with
+    "pymorphy3==2.0.6",
+    "pymorphy3-dicts-ru==2.4.417150.4580142",
+]
+
+[tool.flet]
+product = "AI Text Check"  # name shown under the launcher icon
+
+[tool.flet.android]
+# onnxruntime has no wheels for armeabi-v7a in the Flet index; arm64-v8a is every current phone,
+# x86_64 is the emulator
+target_arch = ["arm64-v8a", "x86_64"]
+
+[tool.flet.app]
+# flet build packs every non-hidden file next to main.py into the APK;
+# list what the app does not need at runtime (exact paths, no wildcards).
+exclude = [
+    "tests",
+    "tools",
+    "Makefile",
+    "README.md",
+    "run_tests.py",
+    "finetune_android.ipynb",
+]
