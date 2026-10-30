@@ -19,9 +19,10 @@ dependencies = [
 product = "AI Text Check"  # name shown under the launcher icon
 
 [tool.flet.android]
-# onnxruntime has no wheels for armeabi-v7a in the Flet index; arm64-v8a is every current phone,
-# x86_64 is the emulator
-target_arch = ["arm64-v8a", "x86_64"]
+# onnxruntime has no wheels for armeabi-v7a in the Flet index; arm64-v8a is every current phone.
+# One architecture, not two: it halves what the build has to write (the GitHub runner ran out of
+# disk space with x86_64 added). Add "x86_64" for a build that has to run in an emulator.
+target_arch = ["arm64-v8a"]
 
 [tool.flet.app]
 # flet build packs every non-hidden file next to main.py into the APK;
