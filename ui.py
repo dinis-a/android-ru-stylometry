@@ -18,7 +18,7 @@ from verdict import SHORT_WORDS, assess, count_words, decide, health_check
 
 log = logging.getLogger(__name__)
 
-APP_NAME = "AI Text Check"  # the name under the launcher icon (pyproject.toml); not translated
+APP_NAME = "AITrace"  # the name under the launcher icon (pyproject.toml) and in RuStore; not translated
 APP_VERSION = "0.2.0"  # the same as in pyproject.toml; a test compares them
 
 ACCENT = ft.Colors.TEAL
@@ -40,6 +40,7 @@ LOOKS = {
     "unsure": (ft.Icons.HELP_OUTLINE, ft.Colors.BLUE_GREY_200),
     "foreign": (ft.Icons.TRANSLATE, ft.Colors.BLUE_GREY_200),
     "empty": (ft.Icons.TEXT_SNIPPET, ft.Colors.BLUE_GREY_200),
+    "clipboard": (ft.Icons.CONTENT_PASTE, ft.Colors.BLUE_GREY_200),
     "error": (ft.Icons.ERROR_OUTLINE, ft.Colors.RED_300),
 }
 AGREEMENT_COLOURS = {
@@ -65,12 +66,13 @@ def agreement(neural, style):
 class App:
     """Puts the app on a Flet page and keeps its controls, so that tests can drive them."""
 
-    def __init__(self, page, detector, analyzer=None, lang="ru", save_language=None):
+    def __init__(self, page, detector, analyzer=None, lang="ru", save_language=None, read_clipboard=None):
         self.page = page
         self.detector = detector
         self.analyzer = analyzer
         self.lang = lang
         self.save_language = save_language  # called with the code when the user picks a language
+        self.read_clipboard = read_clipboard  # an async function that gives the text on the clipboard
         self.bindings = []  # (control, attribute, function giving the text): see `bind`
         self.verdict = None  # what the card shows: a Verdict ...
         self.message = None  # ... or "empty" / "error"
@@ -178,12 +180,27 @@ class App:
             card.width = width
 
     def build_check_page(self):
+        # the frame has to be drawn: on the black page an empty field is otherwise a hole with a word in it
         self.field = ft.TextField(
-            multiline=True, min_lines=6, max_lines=12, border_radius=12, on_change=self.on_change
+            multiline=True,
+            min_lines=6,
+            max_lines=12,
+            border_radius=12,
+            border_color=OUTLINE,
+            focused_border_color=ACCENT,
+            align_label_with_hint=True,
+            on_change=self.on_change,
         )
         self.bind(self.field, lambda: self.tr("field_label"), attr="label")
         self.bind(self.field, lambda: self.tr("field_hint"), attr="hint_text")
-        self.counter = self.bind(ft.Text(size=12, color=MUTED), self.counter_text)
+        self.counter = self.bind(ft.Text(size=12, color=MUTED, expand=True), self.counter_text)
+        self.paste_button = self.bind(
+            ft.TextButton(icon=ft.Icons.CONTENT_PASTE, on_click=self.paste),
+            lambda: self.tr("button_paste"),
+            attr="content",
+        )
+        # the warning about a short text is long: the counter takes the room the button leaves and wraps
+        status = ft.Row([self.counter, self.paste_button], spacing=8, vertical_alignment=ft.CrossAxisAlignment.CENTER)
         self.check_button = self.bind(
             ft.Button(icon=ft.Icons.SEARCH, on_click=self.check),
             lambda: self.tr("button_check"),
@@ -272,7 +289,7 @@ class App:
             ft.Divider(height=8, color=SURFACE),
             self.banner_box,
             self.field,
-            self.counter,
+            status,
             buttons,
             examples,
             self.result,
@@ -400,6 +417,22 @@ class App:
 
     def clear(self, e=None):
         self.field.value = ""
+        self.on_change(None)
+
+    async def paste(self, e=None):
+        """Replace the text with what is on the clipboard (the user presses Check when it is the right text)."""
+        try:
+            text = await self.read_clipboard() if self.read_clipboard else None
+        except Exception:  # a clipboard that cannot be read is told to the user like an empty one
+            log.warning("could not read the clipboard", exc_info=True)
+            text = None
+        if not text or not text.strip():
+            self.verdict = self.style = None
+            self.message = "clipboard"
+            self.render()
+            self.page.update()
+            return
+        self.field.value = text
         self.on_change(None)
 
     def use_sample(self, text):

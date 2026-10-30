@@ -53,6 +53,17 @@ def storage(prefs):
         entry.ft.SharedPreferences = original
 
 
+@contextmanager
+def clipboard_of(service):
+    """main() makes its own Clipboard, which needs a running page: swap in a stand-in."""
+    original = entry.ft.Clipboard
+    entry.ft.Clipboard = lambda: service
+    try:
+        yield
+    finally:
+        entry.ft.Clipboard = original
+
+
 def run(coroutine):
     return asyncio.run(coroutine)
 
@@ -112,6 +123,19 @@ def test_the_choice_of_the_user_is_stored():
     handler, args, _ = page.tasks[-1]
     run(handler(*args))
     assert stored == [(entry.LANGUAGE_KEY, "en")]
+
+
+def test_the_paste_button_reads_the_clipboard_of_the_device():
+    class Clipboard:
+        async def get(self):
+            return "Скопированный текст"
+
+    page = Page(["ru"])
+    with storage(Prefs(None)), clipboard_of(Clipboard()):
+        run(entry.main(page))
+    app = page.on_resize.__self__  # on_resize is a method of the App
+    run(app.paste())
+    assert app.field.value == "Скопированный текст"
 
 
 def test_without_a_model_the_screen_says_so_instead_of_staying_blank():

@@ -28,6 +28,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "counter_short": "Слов: {n}. Короткий текст: модель на нём ошибается чаще.",
         "button_check": "Проверить",
         "button_clear": "Очистить",
+        "button_paste": "Вставить",
         "examples": "Примеры:",
         "example_machine": "нейросеть",
         "example_human": "классика",
@@ -38,11 +39,16 @@ TEXTS: dict[str, dict[str, str]] = {
         "verdict_foreign": "Не похоже на русский текст",
         "verdict_empty": "Введите текст",
         "verdict_error": "Не удалось проверить текст",
+        "verdict_clipboard": "Не удалось вставить текст",
         "detail_probability": "Вероятность машинного текста по оценке нейросетевой модели: {p}",
         "detail_pieces": " (по {n} фрагментам текста)",
         "detail_empty": "Вставьте или напишите текст, который нужно проверить.",
         "detail_foreign": "Модель обучена на русских текстах, для других языков её ответ ничего не значит.",
         "detail_error": "Попробуйте ещё раз или перезапустите приложение.",
+        "detail_clipboard": (
+            "Буфер обмена пуст или недоступен. Скопируйте текст в другом приложении и нажмите "
+            "«Вставить» ещё раз."
+        ),
         "percent_less": "меньше 1%",
         "percent_more": "больше 99%",
         "note_short": (
@@ -162,7 +168,10 @@ TEXTS: dict[str, dict[str, str]] = {
             "объясняет, почему ответ именно такой."
         ),
         "how_title": "Как пользоваться",
-        "how_step_1": "Вставьте текст на русском языке или нажмите на пример.",
+        "how_step_1": (
+            "Введите текст на русском языке или вставьте его кнопкой «Вставить» из буфера обмена. "
+            "Можно нажать на пример."
+        ),
         "how_step_2": (
             "Нажмите «Проверить». Лучше всего модель работает на абзацах, на коротких текстах "
             "она ошибается чаще."
@@ -213,6 +222,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "counter_short": "Words: {n}. Short text: the model makes more mistakes on it.",
         "button_check": "Check",
         "button_clear": "Clear",
+        "button_paste": "Paste",
         "examples": "Examples:",
         "example_machine": "neural network",
         "example_human": "classic",
@@ -223,11 +233,15 @@ TEXTS: dict[str, dict[str, str]] = {
         "verdict_foreign": "Does not look like Russian text",
         "verdict_empty": "Enter a text",
         "verdict_error": "Could not check the text",
+        "verdict_clipboard": "Could not paste the text",
         "detail_probability": "Probability of machine text according to the neural model: {p}",
         "detail_pieces": " (from {n} parts of the text)",
         "detail_empty": "Paste or type the text to check.",
         "detail_foreign": "The model was trained on Russian texts; for other languages its answer means nothing.",
         "detail_error": "Try again or restart the app.",
+        "detail_clipboard": (
+            "The clipboard is empty or not available. Copy a text in another app and tap Paste again."
+        ),
         "percent_less": "less than 1%",
         "percent_more": "more than 99%",
         "note_short": (
@@ -347,7 +361,10 @@ TEXTS: dict[str, dict[str, str]] = {
             "and explains why the answer is what it is."
         ),
         "how_title": "How to use it",
-        "how_step_1": "Paste a text in Russian or tap an example.",
+        "how_step_1": (
+            "Type a text in Russian or paste it from the clipboard with the Paste button. "
+            "You can also tap an example."
+        ),
         "how_step_2": (
             "Press “Check”. The model works best on paragraphs and makes more mistakes on short "
             "texts."

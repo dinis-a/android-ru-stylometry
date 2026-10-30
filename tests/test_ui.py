@@ -1,5 +1,6 @@
 """Tests for the screens, driven through a stand-in for the Flet page. Run with `python run_tests.py`."""
 
+import asyncio
 import logging
 import sys
 from pathlib import Path
@@ -42,9 +43,11 @@ class FakeDetector:
         return {"label": "ai", "p_ai": p, "tokens": max(1, len(text) // 4), "truncated": False}
 
 
-def make_app(detector=DETECTOR, analyzer=ANALYZER, lang="ru", saved=None):
+def make_app(detector=DETECTOR, analyzer=ANALYZER, lang="ru", saved=None, clipboard=None):
     page = StubPage()
-    app = ui.App(page, detector, analyzer, lang, save_language=saved.append if saved is not None else None)
+    app = ui.App(
+        page, detector, analyzer, lang, save_language=saved.append if saved is not None else None, read_clipboard=clipboard
+    )
     return app, page
 
 
@@ -155,6 +158,46 @@ def test_clear_empties_the_field_and_the_card():
     app.clear()
     assert app.field.value == "" and not app.result.visible
     assert app.counter.value == TEXTS["ru"]["counter"].format(n=0)
+
+
+def test_paste_replaces_the_text_with_the_clipboard_and_leaves_the_checking_to_the_user():
+    async def clipboard():
+        return "Новый текст из буфера обмена."
+
+    app, _ = make_app(clipboard=clipboard)
+    type_text(app, LONG_MACHINE)
+    app.check()
+    assert app.result.visible
+    asyncio.run(app.paste())
+    assert app.field.value == "Новый текст из буфера обмена."
+    assert app.counter.value == TEXTS["ru"]["counter_short"].format(n=5)
+    assert not app.result.visible  # the verdict on show was for the old text, and nothing is checked yet
+
+
+def test_an_empty_or_unreadable_clipboard_is_told_and_the_text_stays():
+    async def nothing():
+        return None
+
+    async def blank():
+        return " \n "
+
+    async def broken():
+        raise RuntimeError("no access to the clipboard")
+
+    for read in (nothing, blank, broken, None):  # None: the app was started without a clipboard
+        app, _ = make_app(clipboard=read)
+        type_text(app, SHORT_TEXT)
+        asyncio.run(app.paste())
+        assert app.field.value == SHORT_TEXT
+        assert app.title.value == TEXTS["ru"]["verdict_clipboard"]
+        assert not app.bar.visible and not app.style_box.visible
+
+
+def test_the_paste_button_follows_the_language():
+    app, _ = make_app()
+    assert app.paste_button.content == TEXTS["ru"]["button_paste"]
+    app.set_language("en")
+    assert app.paste_button.content == TEXTS["en"]["button_paste"]
 
 
 def test_the_examples_fill_the_field_and_check_it():

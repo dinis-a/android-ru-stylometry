@@ -46,6 +46,7 @@ async def device_languages(page: ft.Page) -> list[str]:
 
 async def main(page: ft.Page):
     prefs = ft.SharedPreferences()
+    clipboard = ft.Clipboard()
     lang = await saved_language(prefs) or pick_language(await device_languages(page))
     if detector is None:
         page.add(ft.Text(TEXTS[lang]["banner_load"].format(error=load_error), selectable=True))
@@ -56,6 +57,7 @@ async def main(page: ft.Page):
         analyzer,
         lang,
         save_language=lambda code: page.run_task(prefs.set, LANGUAGE_KEY, code),
+        read_clipboard=clipboard.get,
     )
 
 
