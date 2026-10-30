@@ -25,10 +25,11 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # not ubuntu-latest: that label moves to Ubuntu 26.04, and the build is known to work on this image
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # The runner comes with a lot of preinstalled software and little free space, and building the app with
       # its ONNX model and libraries ran out of it ("No space left on device" inside Gradle, after 10 minutes).
@@ -41,15 +42,13 @@ jobs:
           df -h /
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
       # the packages the tests import; `flet build` brings its own for the phone
       - name: Install flet and the packages of the tests
-        run: >
-          pip install "flet==${{ env.FLET_VERSION }}" numpy onnxruntime tokenizers
-          "pymorphy3==2.0.6" "pymorphy3-dicts-ru==2.4.417150.4580142"
+        run: pip install "flet==${{ env.FLET_VERSION }}" numpy onnxruntime tokenizers "pymorphy3==2.0.6"
 
       # fail fast: the tests take seconds, the build takes many minutes
       - name: Run tests
@@ -62,7 +61,7 @@ jobs:
           channel: 'stable'
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -134,8 +133,8 @@ jobs:
           echo "apk_path=$APK" >> $GITHUB_OUTPUT
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: ai-text-check-android
+          name: aitrace-android
           path: ${{ steps.find_apk.outputs.apk_path }}
           if-no-files-found: error

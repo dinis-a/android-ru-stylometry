@@ -1,11 +1,14 @@
 # GitHub gets only what building the APK (and the tests the CI runs first) needs.
 # Everything below stays on the developer's machine.
 
-# Not needed to build: the Colab notebook that trained the model, local helpers, the docs
+# Not needed to build: the Colab notebook that trained the model, local helpers, the docs,
+# and the texts and pictures for the RuStore page of the app
 /finetune_android.ipynb
 /Makefile
 /README.md
 /tools/
+/store/
+android_errors/
 
 # Python
 __pycache__/

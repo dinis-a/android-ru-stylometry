@@ -1,6 +1,7 @@
 """Tests for how the project is put together. Run with `python run_tests.py` (pytest works too)."""
 
 import ast
+import re
 import struct
 import sys
 import tomllib
@@ -17,6 +18,15 @@ WORKFLOW = (ROOT / ".github" / "workflows" / "build-apk.yml").read_text(encoding
 EXCLUDED = PYPROJECT["tool"]["flet"]["app"]["exclude"]
 # the import name of a package -> the name it is installed under
 DISTRIBUTIONS = {"flet": "flet", "numpy": "numpy", "onnxruntime": "onnxruntime", "tokenizers": "tokenizers", "pymorphy3": "pymorphy3"}
+# the files of the dictionaries of pymorphy3 that the app ships with itself
+DICTIONARY_FILES = [
+    "stylometry/dicts/" + name
+    for name in (
+        "meta.json", "grammemes.json", "gramtab-opencorpora-int.json", "gramtab-opencorpora-ext.json",
+        "paradigms.array", "suffixes.json", "words.dawg", "p_t_given_w.intdawg",
+        "prediction-suffixes-0.dawg", "prediction-suffixes-1.dawg", "prediction-suffixes-2.dawg",
+    )
+]
 
 
 def declared():
@@ -39,6 +49,17 @@ def test_the_version_on_the_about_page_is_the_version_of_the_project():
     assert PYPROJECT["project"]["version"] == ui.APP_VERSION
 
 
+def test_the_name_in_the_app_is_the_name_under_the_launcher_icon():
+    # RuStore wants the app to have the same name in its catalog and on the phone
+    assert PYPROJECT["tool"]["flet"]["product"] == ui.APP_NAME
+
+
+def test_the_android_package_id_is_written_down_and_valid():
+    # without it the id follows the project name, and the id of an app that is published cannot change
+    bundle_id = PYPROJECT["tool"]["flet"]["bundle_id"]
+    assert re.fullmatch(r"[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+", bundle_id), bundle_id  # no hyphens on Android
+
+
 def test_every_package_the_app_imports_is_a_dependency():
     local = {path.stem for path in ROOT.glob("*.py")} | {path.name for path in ROOT.iterdir() if path.is_dir()}
     imported = set()
@@ -51,7 +72,6 @@ def test_every_package_the_app_imports_is_a_dependency():
     third_party = {name for name in imported if name not in sys.stdlib_module_names and name not in local}
     assert third_party == set(DISTRIBUTIONS), third_party ^ set(DISTRIBUTIONS)
     assert {DISTRIBUTIONS[name] for name in third_party} <= declared()
-    assert "pymorphy3-dicts-ru" in declared()  # the dictionaries are read at run time
 
 
 def test_the_files_the_models_are_read_from_are_packed_into_the_apk():
@@ -61,10 +81,23 @@ def test_the_files_the_models_are_read_from_are_packed_into_the_apk():
         "ru_detector/config.json",
         "stylometry/model.npz",
         "stylometry/model.json",
+        *DICTIONARY_FILES,
     ]
     for name in needed:
         assert (ROOT / name).is_file(), name
         assert not any(name == path or name.startswith(path + "/") for path in EXCLUDED), name
+
+
+def test_pymorphy3_is_given_the_dictionaries_of_the_app():
+    # on Android all packages sit in one zip file, where pymorphy3 cannot open the dictionaries of its own package
+    calls = [
+        node
+        for path in app_sources()
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
+        if isinstance(node, ast.Call) and ast.unparse(node.func).endswith("MorphAnalyzer")
+    ]
+    assert calls, "no MorphAnalyzer found: did the morphology move?"
+    assert all(any(keyword.arg == "path" for keyword in call.keywords) for call in calls)
 
 
 def first_row_of_the_icon():
@@ -98,7 +131,7 @@ def test_the_app_has_its_own_icon_on_a_transparent_background():
 
 
 def test_what_the_app_does_not_need_is_left_out_of_the_apk():
-    for name in ("tests", "tools", "Makefile", "finetune_android.ipynb", "run_tests.py"):
+    for name in ("tests", "tools", "store", "android_errors", "Makefile", "finetune_android.ipynb", "run_tests.py"):
         assert name in EXCLUDED, name
 
 

@@ -2,21 +2,23 @@
 # Reference: https://flet.dev/docs/publish/
 
 [project]
-name = "ai-text-check"
+name = "aitrace"
 version = "0.2.0"  # version name shown to users (the About page); the build number comes from CI
 dependencies = [
     "flet==1.0.4",  # the same as FLET_VERSION in .github/workflows/build-apk.yml
     "numpy",
     "onnxruntime",
     "tokenizers",
-    # morphology for the stylometric features: pure Python, the versions the reference values of
-    # tests/fixtures were made with
+    # morphology for the stylometric features: pure Python, the version the reference values of
+    # tests/fixtures were made with. It requires the package of the dictionaries, but the app reads
+    # its own copy (stylometry/dicts): on Android a package sits in a zip, where pymorphy3 cannot
+    # open its dictionary files
     "pymorphy3==2.0.6",
-    "pymorphy3-dicts-ru==2.4.417150.4580142",
 ]
 
 [tool.flet]
-product = "AI Text Check"  # name shown under the launcher icon
+product = "AITrace"  # name shown under the launcher icon: the same as the name in the RuStore Console, which RuStore checks
+bundle_id = "com.flet.aitrace"  # the Android package id: the first APK uploaded to RuStore fixes it for good
 
 [tool.flet.android]
 # onnxruntime has no wheels for armeabi-v7a in the Flet index; arm64-v8a is every current phone.
@@ -30,6 +32,8 @@ target_arch = ["arm64-v8a"]
 exclude = [
     "tests",
     "tools",
+    "store",
+    "android_errors",
     "Makefile",
     "README.md",
     "run_tests.py",
