@@ -1,8 +1,10 @@
 """Tests for how the project is put together. Run with `python run_tests.py` (pytest works too)."""
 
 import ast
+import struct
 import sys
 import tomllib
+import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -63,6 +65,36 @@ def test_the_files_the_models_are_read_from_are_packed_into_the_apk():
     for name in needed:
         assert (ROOT / name).is_file(), name
         assert not any(name == path or name.startswith(path + "/") for path in EXCLUDED), name
+
+
+def first_row_of_the_icon():
+    """Size and the first row of pixels (RGBA) of assets/icon.png, read without any imaging library."""
+    data = (ROOT / "assets" / "icon.png").read_bytes()
+    assert data[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG file"
+    position, header, pixels = 8, b"", b""
+    while position < len(data):
+        length = struct.unpack(">I", data[position : position + 4])[0]
+        tag, body = data[position + 4 : position + 8], data[position + 8 : position + 8 + length]
+        if tag == b"IHDR":
+            header = body
+        elif tag == b"IDAT":
+            pixels += body
+        position += 12 + length
+    width, height, depth, colour, _, _, interlace = struct.unpack(">IIBBBBB", header)
+    assert (depth, colour, interlace) == (8, 6, 0), "the icon has to be 8-bit RGBA without interlacing"
+    raw = zlib.decompressobj().decompress(pixels, 1 + 4 * width)
+    row = bytearray(raw[1:])
+    if raw[0] in (1, 3, 4):  # of a first row, the filters that look at the pixel to the left
+        for i in range(4, len(row)):
+            row[i] = (row[i] + (row[i - 4] >> 1 if raw[0] == 3 else row[i - 4])) & 255
+    return width, height, row
+
+
+def test_the_app_has_its_own_icon_on_a_transparent_background():
+    width, height, row = first_row_of_the_icon()
+    assert width == height >= 512  # Flet takes assets/icon.png and no other name
+    # Flet adds the margin for Android's round mask only around a picture with a transparent background
+    assert not any(row[3::4]), "the top row of the icon is not transparent"
 
 
 def test_what_the_app_does_not_need_is_left_out_of_the_apk():
