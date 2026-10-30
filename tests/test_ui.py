@@ -101,9 +101,19 @@ def test_a_machine_text_gets_a_verdict_and_its_reasons():
     shown = " ".join(texts_in(app.style_body))
     assert TEXTS["ru"]["style_probability"].split("{")[0] in shown
     assert TEXTS["ru"]["reasons_title"] in shown and TEXTS["ru"]["groups_title"] in shown
-    # five reasons, each with the three values to compare
-    assert shown.count(TEXTS["ru"]["reason_values"].split("{")[0]) == ui.TOP_REASONS
+    # five reasons: each is a feature and the way it pushes the answer
+    arrows = TEXTS["ru"]["toward_ai"], TEXTS["ru"]["toward_human"]
+    assert sum(shown.count(arrow) for arrow in arrows) == ui.TOP_REASONS
     assert not app.check_button.disabled and not app.spinner.visible
+
+
+def test_a_reason_has_no_explanation_under_it():
+    app, _ = make_app()
+    type_text(app, LONG_MACHINE)
+    app.check()
+    shown = " ".join(texts_in(app.style_body))
+    # the values of the text, the typical ones and the classes: numbers that only confuse a reader
+    assert "В тексте" not in shown and "у людей" not in shown
 
 
 def test_a_human_text_gets_a_verdict():

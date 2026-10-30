@@ -58,11 +58,10 @@ def test_the_strongest_reasons_come_first():
     assert group_sizes == sorted(group_sizes, reverse=True)
 
 
-def test_a_reason_carries_the_values_to_compare():
+def test_a_reason_says_what_its_effect_is_measured_against():
     reason = ANALYZER.analyze(FIXTURES[0]["text"]).reasons[0]
     index = ANALYZER.columns.index(reason.feature)
     assert reason.typical == ANALYZER.baseline[index] and reason.group == ANALYZER.group_of[index]
-    assert reason.human == ANALYZER.human[index] and reason.machine == ANALYZER.machine[index]
 
 
 def test_a_text_with_typical_features_has_no_reasons():
@@ -95,7 +94,7 @@ def test_the_model_file_describes_the_model_it_holds():
     meta = ANALYZER.meta
     assert meta["columns"] == [name for _, name, _ in describe_features(DEFAULT_GROUPS)]
     assert meta["groups"] == [group for group, _, _ in describe_features(DEFAULT_GROUPS)]
-    assert len(meta["baseline"]) == len(meta["median_human"]) == len(meta["median_machine"]) == 66
+    assert len(meta["baseline"]) == 66
     assert meta["positive_class"] == "ai" and meta["max_words"] == 500
     assert 0.85 < meta["test_metrics"]["accuracy"] < 0.95 and meta["test_metrics"]["n"] == 52521
     assert meta["source"]["dataset"]["revision"]

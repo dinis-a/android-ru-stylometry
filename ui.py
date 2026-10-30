@@ -10,7 +10,6 @@ from i18n import (
     LANGUAGES,
     LIMITS,
     TEXTS,
-    format_feature,
     format_number,
     format_percent,
 )
@@ -565,35 +564,14 @@ class App:
         for reason in report.reasons[:TOP_REASONS]:
             toward = "toward_ai" if reason.effect > 0 else "toward_human"
             colour = LOOKS["ai" if reason.effect > 0 else "human"][1]
-            values = self.tr(
-                "reason_values",
-                value=format_feature(reason.feature, reason.value, lang),
-                human=format_feature(reason.feature, reason.human, lang),
-                machine=format_feature(reason.feature, reason.machine, lang),
-            )
             controls.append(
-                ft.Column(
+                ft.Row(
                     [
-                        ft.Row(
-                            [
-                                ft.Text(
-                                    self.tr(f"feat_{reason.feature}"),
-                                    size=13,
-                                    weight=ft.FontWeight.W_600,
-                                    expand=True,
-                                ),
-                                ft.Text(
-                                    f"{signed(reason.effect, lang)} {self.tr(toward)}",
-                                    size=12,
-                                    color=colour,
-                                ),
-                            ],
-                            spacing=8,
-                            vertical_alignment=ft.CrossAxisAlignment.START,
-                        ),
-                        muted(values),
+                        ft.Text(self.tr(f"feat_{reason.feature}"), size=13, weight=ft.FontWeight.W_600, expand=True),
+                        ft.Text(f"{signed(reason.effect, lang)} {self.tr(toward)}", size=12, color=colour),
                     ],
-                    spacing=2,
+                    spacing=8,
+                    vertical_alignment=ft.CrossAxisAlignment.START,
                 )
             )
         controls.append(muted(self.tr("style_footnote")))

@@ -80,7 +80,6 @@ TEXTS: dict[str, dict[str, str]] = {
         "groups_title": "Какие виды признаков повлияли",
         "groups_hint": "Вправо — к «нейросеть», влево — к «человек».",
         "reasons_title": "Главные причины",
-        "reason_values": "В тексте: {value} · у людей: {human} · у нейросетей: {machine}",
         "toward_ai": "→ нейросеть",
         "toward_human": "→ человек",
         "style_footnote": (
@@ -273,7 +272,6 @@ TEXTS: dict[str, dict[str, str]] = {
         "groups_title": "Which kinds of features mattered",
         "groups_hint": "Right: towards “neural network”, left: towards “human”.",
         "reasons_title": "Main reasons",
-        "reason_values": "In the text: {value} · humans: {human} · neural networks: {machine}",
         "toward_ai": "→ neural network",
         "toward_human": "→ human",
         "style_footnote": (
@@ -432,10 +430,3 @@ def format_percent(p: float, lang: str) -> str:
     if p > 0.99:
         return TEXTS[lang]["percent_more"]
     return f"{p:.0%}"
-
-
-def format_feature(name: str, value: float, lang: str) -> str:
-    """A feature value the way a reader wants it: shares as percent, the rest as numbers."""
-    if name.endswith(("_ratio", "_share")):
-        return format_number(100 * value, lang, 1) + "%"
-    return format_number(value, lang, 1 if abs(value) >= 10 else 2)

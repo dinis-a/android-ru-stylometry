@@ -5,7 +5,9 @@ on them, says how likely the text is machine-made. The reasons follow ``explain_
 ru-stylometry: a feature is replaced by its typical value (the training median) and the fall of
 the log-odds of "machine" is its effect. Positive effects push towards "machine", negative ones
 towards "human". The effects are not additive: correlated features share the credit, so the
-effect of a whole group of features is measured apart.
+effect of a whole group of features is measured apart. The other features keep the values they
+have in the text, so an effect is what the feature does in this text, not a comparison with an
+average human or machine text: the model is a deep ensemble of trees, and features work together.
 """
 
 import json
@@ -26,8 +28,6 @@ class Reason:
     group: str
     value: float  # in this text
     typical: float  # median over the training texts: what the effect is measured against
-    human: float  # median over the human texts
-    machine: float  # median over the machine texts
     effect: float  # fall of the log-odds of "machine" when the feature is set to `typical`
 
 
@@ -54,8 +54,6 @@ class StyleAnalyzer:
         self.group_of = list(self.meta["groups"])
         self.max_words = int(self.meta["max_words"])
         self.baseline = np.asarray(self.meta["baseline"], dtype=np.float64)
-        self.human = np.asarray(self.meta["median_human"], dtype=np.float64)
-        self.machine = np.asarray(self.meta["median_machine"], dtype=np.float64)
         with np.load(folder / "model.npz") as arrays:
             self.boosting = Boosting(
                 arrays["feature"],
@@ -98,8 +96,6 @@ class StyleAnalyzer:
                 self.group_of[i],
                 float(row[i]),
                 float(self.baseline[i]),
-                float(self.human[i]),
-                float(self.machine[i]),
                 float(effects[i]),
             )
             for i in np.argsort(-np.abs(effects), kind="stable")

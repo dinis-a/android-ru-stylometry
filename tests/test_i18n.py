@@ -14,7 +14,6 @@ from i18n import (  # noqa: E402
     LANGUAGES,
     LIMITS,
     TEXTS,
-    format_feature,
     format_number,
     format_percent,
     pick_language,
@@ -102,9 +101,3 @@ def test_probabilities_are_never_shown_as_certain():
     assert format_percent(0.8731, "ru") == "87%"
 
 
-def test_features_are_shown_in_their_own_units():
-    assert format_feature("conj_ratio", 0.116, "en") == "11.6%"
-    assert format_feature("case_gent_share", 0.0544, "ru") == "5,4%"
-    assert format_feature("avg_word_len", 6.157, "en") == "6.16"
-    assert format_feature("mtld", 85.34, "ru") == "85,3"
-    assert format_feature("comma_per100w", 9.09, "en") == "9.09"
