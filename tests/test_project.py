@@ -148,6 +148,16 @@ def test_the_ci_uses_the_flet_that_the_project_is_built_for():
     assert f'FLET_VERSION: "{version}"' in WORKFLOW
 
 
+def test_the_ci_installs_the_pinned_flutter_with_a_checksum():
+    # the flutter-action composite action calls actions/cache by tag, which the
+    # repository's SHA pinning policy rejects, so the SDK is downloaded by hand
+    assert "subosito/flutter-action" not in WORKFLOW
+    version = re.search(r'FLUTTER_VERSION: "([^"]+)"', WORKFLOW).group(1)
+    checksum = re.search(r'FLUTTER_SHA256: "([^"]+)"', WORKFLOW).group(1)
+    assert re.fullmatch(r"[0-9a-f]{64}", checksum)
+    assert f"flutter_linux_{version}-stable.tar.xz" in WORKFLOW
+
+
 def test_the_ci_actions_are_pinned_to_commit_shas():
     for workflow in sorted((ROOT / ".github" / "workflows").glob("*.yml")):
         for line in workflow.read_text(encoding="utf-8").splitlines():
