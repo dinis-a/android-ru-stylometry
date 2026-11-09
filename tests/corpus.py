@@ -1,9 +1,11 @@
 """Texts for judging the model: what it says about writing it was not trained on.
 
 The human ones are Russian classics (in the public domain) and the first sentences of two
-articles of ru.wikipedia (CC BY-SA), quoted from memory. The machine ones were written by a
-language model for this project, in the usual style of a chatbot. A handful of texts says
-little about accuracy, but it is enough to tell a model that works from one that does not.
+articles of ru.wikipedia, [Москва](https://ru.wikipedia.org/wiki/Москва) and
+[Байкал](https://ru.wikipedia.org/wiki/Байкал) (CC BY-SA), quoted from memory. The machine
+ones were written by a language model for this project, in the usual style of a chatbot. A
+handful of texts says little about accuracy, but it is enough to tell a model that works
+from one that does not.
 """
 
 HUMAN = {

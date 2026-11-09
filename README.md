@@ -16,12 +16,15 @@ through RuStore.
 | **Size** | 36 MB model; about 150 MB APK |
 | **Privacy** | No network, no registration; the text stays on the phone |
 | **Platform** | Android, `arm64-v8a`, RuStore |
+| **License** | MIT; see [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md) |
 
 ## How it works
 
-The **neural model** is `cointegrated/rubert-tiny2`, fine-tuned on the Russian part
-of LLMTrace (a corpus of human- and AI-written texts) and exported to ONNX. It is
-small enough for a phone (36 MB) and gives the main verdict.
+The **neural model** is [`cointegrated/rubert-tiny2`](https://huggingface.co/cointegrated/rubert-tiny2),
+fine-tuned on the Russian part of
+[LLMTrace](https://huggingface.co/datasets/iitolstykh/LLMTrace_classification)
+(a corpus of human- and AI-written texts) and exported to ONNX. It is small enough
+for a phone (36 MB) and gives the main verdict.
 
 The **stylometric model** looks at 66 measurable properties of the text: word and
 sentence length, punctuation, syntax, parts of speech, vocabulary diversity,
@@ -37,8 +40,10 @@ probability, not proof of authorship; see [Limitations](#limitations).
 
 ## Run and test
 
+Requires Python 3.12.
+
 ```bash
-pip install flet==1.0.4 numpy onnxruntime tokenizers pymorphy3==2.0.6
+python -m pip install -r requirements.txt
 python main.py
 python run_tests.py
 ```
@@ -48,13 +53,15 @@ python run_tests.py
 ## Build
 
 ```bash
+python -m pip install -r requirements.txt
 flet build apk --yes
 ```
 
 The APK targets `arm64-v8a` and needs Flutter 3.44.8 and Java 17, the versions
 used by CI. GitHub Actions runs the tests and builds the APK on every push to
-`main`; the workflow is `.github/workflows/build-apk.yml`. The signing key is read
-from the repository secrets.
+`main` (`.github/workflows/build-apk.yml`) and runs the tests on every pull
+request (`.github/workflows/tests.yml`). The signing key is read from the
+repository secrets.
 
 ## Layout
 
@@ -67,8 +74,11 @@ from the repository secrets.
 | `tests/` | test suite |
 | `assets/` | app icon |
 | `pyproject.toml` | Flet build settings |
+| `requirements.txt` | pinned Python packages |
 | `run_tests.py` | dependency-free test runner |
+| `LICENSE`, `THIRD_PARTY_NOTICES.md`, `LICENSES/` | licensing and attribution |
 | `.github/workflows/build-apk.yml` | CI: tests and APK build |
+| `.github/workflows/tests.yml` | CI: tests on pull requests |
 
 ## Limitations
 
@@ -84,4 +94,11 @@ from the repository secrets.
 - pymorphy3 dictionaries are shipped in `stylometry/dicts/` because Android packs
   app files into a zip and pymorphy3 cannot open them from there.
 - The stylometry code is a copy of ru-stylometry 0.1.1 (MIT) with the scikit-learn
-  dependency removed.
+  dependency removed. Third-party licenses and attribution are in
+  [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## License
+
+The project is released under the [MIT License](LICENSE). Third-party components
+and data are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); the full
+license texts are in [LICENSES/](LICENSES/).

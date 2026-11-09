@@ -1,0 +1,10 @@
+# Pinned versions of the packages used by the tests and the Android build.
+# Keep in sync with pyproject.toml and FLET_VERSION in
+# .github/workflows/build-apk.yml. The versions are the ones from the last
+# successful CI build.
+flet==1.0.4
+numpy==2.5.4
+onnxruntime==1.31.1
+tokenizers==0.23.3
+pymorphy3==2.0.6
+pymorphy3-dicts-ru==2.4.417150.4580142

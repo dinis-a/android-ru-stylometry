@@ -202,7 +202,9 @@ TEXTS: dict[str, dict[str, str]] = {
         "sources_title": "На чём построено",
         "sources_text": (
             "Датасет LLMTrace; модель rubert-tiny2 (cointegrated); пакет ru-stylometry; "
-            "pymorphy3; ONNX Runtime; Flet."
+            "pymorphy3; ONNX Runtime; Flet. Лицензии: MIT (код проекта), "
+            "MIT/Apache-2.0/BSD-3-Clause и другие (сторонние компоненты). Полные тексты — "
+            "в файле THIRD_PARTY_NOTICES.md в репозитории проекта."
         ),
         "version": "Версия {version}",
     },
@@ -394,7 +396,9 @@ TEXTS: dict[str, dict[str, str]] = {
         "sources_title": "Built on",
         "sources_text": (
             "The LLMTrace dataset; the rubert-tiny2 model (cointegrated); the ru-stylometry "
-            "package; pymorphy3; ONNX Runtime; Flet."
+            "package; pymorphy3; ONNX Runtime; Flet. Licenses: MIT (project code), "
+            "MIT/Apache-2.0/BSD-3-Clause and others (third-party components). Full texts "
+            "are in THIRD_PARTY_NOTICES.md in the project repository."
         ),
         "version": "Version {version}",
     },

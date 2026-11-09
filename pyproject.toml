@@ -1,12 +1,18 @@
 [project]
 name = "aitrace"
 version = "0.2.0"
+description = "Android app that detects AI-written Russian text and explains the verdict"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = [
-    "flet==1.0.4",  # keep in sync with FLET_VERSION in the workflow
-    "numpy",
-    "onnxruntime",
-    "tokenizers",
+    # keep in sync with requirements.txt and FLET_VERSION in the workflow
+    "flet==1.0.4",
+    "numpy==2.5.4",
+    "onnxruntime==1.31.1",
+    "tokenizers==0.23.3",
     "pymorphy3==2.0.6",
+    "pymorphy3-dicts-ru==2.4.417150.4580142",
 ]
 
 [tool.flet]
@@ -27,4 +33,8 @@ exclude = [
     "README.md",
     "run_tests.py",
     "finetune_android.ipynb",
+    "LICENSE",
+    "LICENSES",
+    "THIRD_PARTY_NOTICES.md",
+    "requirements.txt",
 ]

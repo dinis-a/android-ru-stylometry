@@ -146,3 +146,19 @@ def test_the_ci_uses_the_flet_that_the_project_is_built_for():
     assert pinned and pinned[0].startswith("flet==")
     version = pinned[0].split("==")[1]
     assert f'FLET_VERSION: "{version}"' in WORKFLOW
+
+
+def test_the_ci_actions_are_pinned_to_commit_shas():
+    for workflow in sorted((ROOT / ".github" / "workflows").glob("*.yml")):
+        for line in workflow.read_text(encoding="utf-8").splitlines():
+            if "uses:" not in line:
+                continue
+            ref = line.split("uses:", 1)[1].split("#", 1)[0].strip()
+            assert re.fullmatch(r"[^@\s]+@[0-9a-f]{40}", ref), (workflow.name, ref)
+
+
+def test_the_ci_and_the_project_use_the_same_pinned_packages():
+    assert "pip install -r requirements.txt" in WORKFLOW
+    requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8")
+    for entry in PYPROJECT["project"]["dependencies"]:
+        assert entry in requirements, entry

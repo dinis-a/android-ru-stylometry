@@ -1,7 +1,7 @@
 The dictionaries of pymorphy3 for Russian, copied unchanged from the package pymorphy3-dicts-ru
-2.4.417150.4580142 (https://github.com/no-plagiarism/pymorphy3-dicts, MIT license according to its
-metadata). They are compiled from OpenCorpora (opencorpora.org, version 0.92, revision 417150); the
-terms of that data are on its site.
+2.4.417150.4580142 (https://github.com/no-plagiarism/pymorphy3-dicts, MIT; see LICENSES/MIT.txt and
+THIRD_PARTY_NOTICES.md in the repository root). They are compiled from OpenCorpora
+(https://opencorpora.org/, version 0.92, revision 417150); the terms of that data are on its site.
 
 They live here and not in the installed package because on Android every package is packed into
 one zip file, and pymorphy3 opens its dictionaries as ordinary files, which fails inside a zip
