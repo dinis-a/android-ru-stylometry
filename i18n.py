@@ -5,14 +5,13 @@ Pure Python with no UI imports, so it can be tested without Flet installed.
 
 from collections.abc import Iterable
 
-# language code -> the language's name in that language (the tooltip of its button in the top bar)
+# language code -> name in that language
 LANGUAGES = {"ru": "Русский", "en": "English"}
-# the app reads Russian texts, so a phone set to another language still gets the Russian screen
+# fallback for a phone set to another language
 DEFAULT_LANGUAGE = "ru"
 
-# language code -> {text key: text}. Every language needs exactly the same keys and the same
-# {placeholders} in each text (the tests check both). feat_<name> labels the features of the
-# stylometric model (stylometry/model.json), group_<name> their groups.
+# Every language must have the same keys and placeholders (checked by tests).
+# feat_<name> labels a feature of the stylometric model, group_<name> its group.
 TEXTS: dict[str, dict[str, str]] = {
     "ru": {
         "decimal_separator": ",",

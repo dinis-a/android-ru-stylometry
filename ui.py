@@ -17,8 +17,8 @@ from verdict import SHORT_WORDS, assess, count_words, decide, health_check
 
 log = logging.getLogger(__name__)
 
-APP_NAME = "AITrace"  # the name under the launcher icon (pyproject.toml) and in RuStore; not translated
-APP_VERSION = "0.2.0"  # the same as in pyproject.toml; a test compares them
+APP_NAME = "AITrace"
+APP_VERSION = "0.2.0"  # must match pyproject.toml
 
 ACCENT = ft.Colors.TEAL
 MUTED = ft.Colors.WHITE_70
@@ -27,10 +27,10 @@ OUTLINE = ft.Colors.WHITE_30
 SCREEN_MARGIN = 12
 MIN_CARD_WIDTH = 280
 MAX_CARD_WIDTH = 560
-FALLBACK_SCREEN_WIDTH = 360  # until the client reports its real size
+FALLBACK_SCREEN_WIDTH = 360
 CARD_PADDING = 16
 BAR_HEIGHT = 8
-TOP_REASONS = 5  # features listed under "main reasons"
+TOP_REASONS = 5
 
 # kind of verdict: icon, colour
 LOOKS = {
@@ -70,12 +70,12 @@ class App:
         self.detector = detector
         self.analyzer = analyzer
         self.lang = lang
-        self.save_language = save_language  # called with the code when the user picks a language
-        self.read_clipboard = read_clipboard  # an async function that gives the text on the clipboard
-        self.bindings = []  # (control, attribute, function giving the text): see `bind`
-        self.verdict = None  # what the card shows: a Verdict ...
-        self.message = None  # ... or "empty" / "error"
-        self.style = None  # None, "loading", a StyleReport or ("error", text)
+        self.save_language = save_language
+        self.read_clipboard = read_clipboard
+        self.bindings = []  # (control, attribute, text function): see `bind`
+        self.verdict = None  # Verdict, or None
+        self.message = None  # "empty" / "error"
+        self.style = None  # None, "loading", StyleReport or ("error", text)
         self.problem = health_check(detector)
         if self.problem:
             log.error("the model gives one answer to different texts: %s", self.problem)
@@ -131,7 +131,7 @@ class App:
         for control, attr, text in self.bindings:
             setattr(control, attr, text())
         self.page.title = self.tr("window_title")
-        # the system's own widgets (the text-selection menu) follow the app's language, not the phone's
+        # the selection menu follows the app language, not the phone's
         self.page.locale_configuration = ft.LocaleConfiguration(
             supported_locales=[ft.Locale(code) for code in LANGUAGES],
             current_locale=ft.Locale(self.lang),
@@ -179,7 +179,7 @@ class App:
             card.width = width
 
     def build_check_page(self):
-        # the frame has to be drawn: on the black page an empty field is otherwise a hole with a word in it
+        # without a border an empty field disappears on the black page
         self.field = ft.TextField(
             multiline=True,
             min_lines=6,
@@ -198,7 +198,6 @@ class App:
             lambda: self.tr("button_paste"),
             attr="content",
         )
-        # the warning about a short text is long: the counter takes the room the button leaves and wraps
         status = ft.Row([self.counter, self.paste_button], spacing=8, vertical_alignment=ft.CrossAxisAlignment.CENTER)
         self.check_button = self.bind(
             ft.Button(icon=ft.Icons.SEARCH, on_click=self.check),
@@ -353,8 +352,7 @@ class App:
         return lambda: self.tr(key, n=SHORT_WORDS)
 
     def build_bars(self):
-        # a button per language, labelled with its code and, in the tooltip, named in its own words
-        # so that it can be found whatever the current language is
+        # one button per language, with the language's own name in the tooltip
         self.language_buttons = {
             code: ft.TextButton(code.upper(), tooltip=name, on_click=lambda e, c=code: self.set_language(c))
             for code, name in LANGUAGES.items()
@@ -422,7 +420,7 @@ class App:
         """Replace the text with what is on the clipboard (the user presses Check when it is the right text)."""
         try:
             text = await self.read_clipboard() if self.read_clipboard else None
-        except Exception:  # a clipboard that cannot be read is told to the user like an empty one
+        except Exception:
             log.warning("could not read the clipboard", exc_info=True)
             text = None
         if not text or not text.strip():
@@ -447,7 +445,7 @@ class App:
     def warm_up(self):
         try:
             self.analyzer.warm_up()
-        except Exception:  # check() reports it when the user asks for the reasons
+        except Exception:
             log.warning("could not warm up the stylometry", exc_info=True)
 
     def check(self, e=None):

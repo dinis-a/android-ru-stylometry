@@ -1,13 +1,8 @@
-"""A second opinion on a text from interpretable stylometric features, with the reasons for it.
+"""Stylometric second opinion: 66 features, a gradient-boosting model, and the reasons.
 
-The text is turned into the 66 features of ru-stylometry and a gradient-boosting model, trained
-on them, says how likely the text is machine-made. The reasons follow ``explain_row`` of
-ru-stylometry: a feature is replaced by its typical value (the training median) and the fall of
-the log-odds of "machine" is its effect. Positive effects push towards "machine", negative ones
-towards "human". The effects are not additive: correlated features share the credit, so the
-effect of a whole group of features is measured apart. The other features keep the values they
-have in the text, so an effect is what the feature does in this text, not a comparison with an
-average human or machine text: the model is a deep ensemble of trees, and features work together.
+The reasons follow ``explain_row`` of ru-stylometry: a feature is replaced by its training
+median, and the fall in the log-odds of "machine" is its effect. Group effects are measured
+the same way, with all features of the group replaced at once.
 """
 
 import json
@@ -26,17 +21,17 @@ CLIP = 1e-6  # as in ru-stylometry: probabilities are clipped before the log-odd
 class Reason:
     feature: str
     group: str
-    value: float  # in this text
-    typical: float  # median over the training texts: what the effect is measured against
-    effect: float  # fall of the log-odds of "machine" when the feature is set to `typical`
+    value: float
+    typical: float
+    effect: float  # fall in log-odds when the feature is set to `typical`
 
 
 @dataclass
 class StyleReport:
     p_ai: float
-    reasons: list  # every feature, the strongest effect first
-    groups: dict  # group name -> its effect, the strongest first
-    words: int  # words analysed: only the first `max_words` of a long text count
+    reasons: list
+    groups: dict
+    words: int
 
 
 def log_odds(p):
@@ -78,8 +73,7 @@ class StyleAnalyzer:
             raise ValueError("the text is empty")
         row = self.features(text)
         n = len(self.columns)
-        # row 0 is the text itself, then one row per feature and one per group with the
-        # feature(s) replaced by their typical value
+        # the text itself, then one variant per feature and one per group
         variants = np.tile(row, (1 + n + len(self.group_names), 1))
         for i in range(n):
             variants[1 + i, i] = self.baseline[i]

@@ -18,22 +18,19 @@ permissions:
   contents: read
 
 env:
-  # flet 1.0.4 requires exactly Flutter 3.44.8 (flet.version.flutter_version): bump both together,
-  # and the flet pin in pyproject.toml with them
+  # keep in sync with flet in pyproject.toml
   FLET_VERSION: "1.0.4"
   FLUTTER_VERSION: "3.44.8"
 
 jobs:
   build:
-    # not ubuntu-latest: that label moves to Ubuntu 26.04, and the build is known to work on this image
+    # ubuntu-latest is 26.04 now; the build is tested on 24.04
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
 
-      # The runner comes with a lot of preinstalled software and little free space, and building the app with
-      # its ONNX model and libraries ran out of it ("No space left on device" inside Gradle, after 10 minutes).
-      # What is removed here is not used by the build; the Android SDK, Python and Java stay.
+      # the runner has little free space and the APK build needs it
       - name: Free disk space
         run: |
           df -h /
@@ -46,11 +43,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      # the packages the tests import; `flet build` brings its own for the phone
       - name: Install flet and the packages of the tests
         run: pip install "flet==${{ env.FLET_VERSION }}" numpy onnxruntime tokenizers "pymorphy3==2.0.6"
 
-      # fail fast: the tests take seconds, the build takes many minutes
       - name: Run tests
         run: python run_tests.py
 
@@ -66,15 +61,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Every release must be signed with the same certificate: Android refuses an update signed with another
-      # one, and a store ties the app to its certificate. Without the secrets the APK gets a throwaway debug
-      # key (a new one on every run), which is fine for testing but cannot be updated or published.
-      # Create the key once (keytool comes with the JDK) and put it into the repository secrets:
-      #   keytool -genkeypair -v -keystore release.jks -storetype PKCS12 -keyalg RSA -keysize 2048 -validity 10000 -alias upload
-      #   base64 -w0 release.jks | gh secret set ANDROID_KEYSTORE_BASE64 --repo OWNER/REPO
-      #   gh secret set ANDROID_KEYSTORE_PASSWORD --repo OWNER/REPO
-      # Optional secrets: ANDROID_KEY_ALIAS (if it is not "upload"), ANDROID_KEY_PASSWORD (if it differs from the
-      # password of the keystore). Keep release.jks and its password safe: without them the app cannot be updated.
+      # without the secrets the APK is signed with a throwaway debug key
       - name: Prepare signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -87,12 +74,6 @@ jobs:
             echo "::warning::ANDROID_KEYSTORE_BASE64 is not set: the APK is signed with a debug key and cannot be published"
           fi
 
-      # CPU architecture, excluded files, app name and package id come from pyproject.toml
-      # (--arch / --exclude flags here would override it).
-      # --build-number becomes versionCode, which has to grow with every release.
-      # Signing settings are exported only for a signed build (an unset secret arrives as an empty string,
-      # which is not the same as an unset variable). Only ANDROID_KEYSTORE_PASSWORD is required: the key
-      # password defaults to it (same for PKCS12) and the alias to "upload", as in the keytool command above.
       - name: Build APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -107,8 +88,6 @@ jobs:
             export FLET_ANDROID_SIGNING_KEY_STORE_PASSWORD="$KEYSTORE_PASSWORD"
             export FLET_ANDROID_SIGNING_KEY_PASSWORD="${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
             export FLET_ANDROID_SIGNING_KEY_ALIAS="${KEY_ALIAS:-upload}"
-            # a wrong password or alias fails here in seconds instead of after the whole build;
-            # on success the log shows the (public) certificate fingerprint the APK will be signed with
             keytool -list -keystore "$FLET_ANDROID_SIGNING_KEY_STORE" \
               -storepass:env FLET_ANDROID_SIGNING_KEY_STORE_PASSWORD \
               -alias "$FLET_ANDROID_SIGNING_KEY_ALIAS" || {
@@ -118,7 +97,6 @@ jobs:
           fi
           flet build apk --yes --build-number ${{ github.run_number }}
 
-      # shows where the space went if the disk fills up again
       - name: Disk usage
         if: always()
         run: |

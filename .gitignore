@@ -5,7 +5,6 @@
 # and the texts and pictures for the RuStore page of the app
 /finetune_android.ipynb
 /Makefile
-/README.md
 /tools/
 /store/
 android_errors/
@@ -41,3 +40,6 @@ Thumbs.db
 # APKs downloaded from the CI
 apk/
 *.apk
+
+# RosNoU
+dnevnik/

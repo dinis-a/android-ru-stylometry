@@ -1,6 +1,5 @@
 """Two texts for the example buttons on the screen and for the self-check of the model."""
 
-# A paragraph in the style of a chatbot, written for this project.
 MACHINE = (
     "Искусственный интеллект представляет собой одну из наиболее значимых технологий "
     "современности. Он находит применение в различных сферах, включая медицину, образование "

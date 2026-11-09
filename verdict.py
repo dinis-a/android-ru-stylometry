@@ -1,7 +1,6 @@
-"""What the app says about a text: the model's answer, how far to trust it, and why.
+"""The app's verdict on a text: the model's answer, how far to trust it, and why.
 
-Nothing here imports Flet, so the rules can be tested without a window. The model itself is in
-ru_detector and is left as the notebook wrote it.
+No Flet imports here, so the rules can be tested without a window.
 """
 
 import math
@@ -10,16 +9,13 @@ from dataclasses import dataclass, field
 
 import samples
 
-# The model works well on paragraphs and badly on a few words: on the texts of tests/corpus.py cut
-# to their first words it was right for 94% of them at 16 words and for all of them from 30,
-# while below 8 words it called almost every machine text "human". The app still answers for a
-# shorter text, but says that the answer is poor.
+# Below 30 words the model is unreliable; the app still answers but warns.
 SHORT_WORDS = 30
 
-CHUNK_CHARS = 900  # about 200 tokens of Russian; the model reads 256 at most
-MAX_CHUNKS = 6  # a longer text is read in part, to keep the wait on a phone short
-UNSURE = 0.25  # an answer this close to the model's threshold is "cannot tell"
-MIN_GAP = 3.0  # self-check: machine text must score this far above human text (log-odds)
+CHUNK_CHARS = 900  # about 200 Russian tokens
+MAX_CHUNKS = 6
+UNSURE = 0.25  # answers this close to the threshold are "cannot tell"
+MIN_GAP = 3.0  # self-check: the two samples must be this far apart in log-odds
 
 _WORD = re.compile(r"[^\W\d_]+(?:-[^\W\d_]+)*")
 _SENTENCE_END = re.compile(r"[.!?…]+[»”)]*(?=\s)|\n")
@@ -28,11 +24,11 @@ _SENTENCE_END = re.compile(r"[.!?…]+[»”)]*(?=\s)|\n")
 @dataclass
 class Verdict:
     kind: str  # "ai", "human", "unsure" or "foreign"
-    p_ai: float | None  # the model's probability of the machine class; None if it was not asked
+    p_ai: float | None
     words: int
     chars: int = 0
-    pieces: int = 0  # how many pieces of the text the model read
-    unread: int = 0  # characters at the end of the text that were left out
+    pieces: int = 0
+    unread: int = 0
     notes: list = field(default_factory=list)  # "short", "unformatted", "partial"
 
 
@@ -110,9 +106,9 @@ def assess(detector, text):
     pieces, unread = split_text(text)
     answers = [detector.predict(piece) for piece in pieces]
     if len(answers) == 1:
-        p_ai = answers[0]["p_ai"]  # the answer of the model as it is
+        p_ai = answers[0]["p_ai"]
     else:
-        # a piece with more tokens is more evidence: average the log-odds with that weight
+        # weight the log-odds by the number of tokens in each piece
         tokens = sum(a["tokens"] for a in answers)
         margin = sum(logit(a["p_ai"]) * a["tokens"] for a in answers) / tokens
         p_ai = 1 / (1 + math.exp(-margin))
@@ -143,7 +139,7 @@ def health_check(detector):
     try:
         human = logit(detector.predict(samples.HUMAN)["p_ai"])
         machine = logit(detector.predict(samples.MACHINE)["p_ai"])
-    except Exception as error:  # a broken file or library
+    except Exception as error:
         return f"{type(error).__name__}: {error}"
     if machine - human < MIN_GAP:
         return (

@@ -1,14 +1,6 @@
-"""Detector of machine-generated Russian text for an Android app built with Flet.
+"""ONNX detector of machine-generated Russian text.
 
-The module needs numpy, onnxruntime and tokenizers only: these are the packages that Flet
-builds for Android (torch is not among them). The files of the model lie next to the module:
-model.onnx, tokenizer.json and config.json.
-
-    from ru_detector import Detector
-
-    detector = Detector()
-    answer = detector.predict("Текст для проверки.")
-    answer["label"], answer["p_ai"]
+The model files (model.onnx, tokenizer.json, config.json) sit next to this module.
 """
 
 import json
@@ -23,7 +15,6 @@ class Detector:
     """Loads the model once; predict() is cheap enough to run on every press of a button."""
 
     def __init__(self, folder=None, threads=None):
-        # Flet 0.86 and later: read the files shipped with the app relative to __file__.
         folder = Path(folder) if folder is not None else Path(__file__).resolve().parent
         self.config = json.loads((folder / "config.json").read_text(encoding="utf-8"))
         self.max_len = int(self.config["max_len"])

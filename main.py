@@ -9,16 +9,16 @@ from ui import App
 
 logger = logging.getLogger(__name__)
 
-LANGUAGE_KEY = "language"  # where the user's choice of language is stored (SharedPreferences)
+LANGUAGE_KEY = "language"
 
 load_error = None
 try:
-    detector = Detector()  # the model is loaded once, at the start of the app
-except Exception as error:  # say what is wrong on the screen instead of showing a blank page
+    detector = Detector()
+except Exception as error:  # show the error on the page instead of a blank screen
     detector, load_error = None, error
 
 try:
-    analyzer = StyleAnalyzer()  # the reasons; without them the app still gives its answer
+    analyzer = StyleAnalyzer()
 except Exception:
     logger.warning("could not load the stylometric model", exc_info=True)
     analyzer = None
@@ -28,7 +28,7 @@ async def saved_language(prefs: ft.SharedPreferences) -> str | None:
     """The language the user picked in an earlier session, if any."""
     try:
         code = await prefs.get(LANGUAGE_KEY)
-    except Exception:  # the choice is a convenience: a broken store must not stop the app
+    except Exception:
         logger.warning("could not read the saved language", exc_info=True)
         return None
     return code if isinstance(code, str) and code in TEXTS else None
@@ -38,7 +38,7 @@ async def device_languages(page: ft.Page) -> list[str]:
     """Language codes the device is set to, the most preferred first."""
     try:
         info = await page.get_device_info()
-    except Exception:  # without it the default language will do
+    except Exception:
         logger.warning("could not read the device languages", exc_info=True)
         return []
     return [locale.language_code for locale in info.locales] if info else []
