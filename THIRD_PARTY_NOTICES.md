@@ -23,9 +23,9 @@ together with the rest of this project.
 | Component | Version | License | Copyright / attribution |
 |:--|:--|:--|:--|
 | Flet | 1.0.4 | Apache-2.0 | Copyright (c) Flet authors |
-| NumPy | 2.5.4 | BSD-3-Clause | Copyright (c) 2005-2026, NumPy Developers |
-| ONNX Runtime | 1.31.1 | MIT | Copyright (c) Microsoft Corporation |
-| tokenizers | 0.23.3 | Apache-2.0 | Copyright (c) Hugging Face |
+| NumPy | 2.4.6 | BSD-3-Clause | Copyright (c) 2005-2026, NumPy Developers |
+| ONNX Runtime | 1.27.0 | MIT | Copyright (c) Microsoft Corporation |
+| tokenizers | 0.23.1 | Apache-2.0 | Copyright (c) Hugging Face |
 | pymorphy3 | 2.0.6 | MIT | Copyright (c) 2022 Danylo Halaiko (no-plagiarism) |
 | pymorphy3-dicts-ru | 2.4.417150.4580142 | MIT | Copyright (c) 2022 no-plagiarism |
 

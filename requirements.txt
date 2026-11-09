@@ -1,10 +1,11 @@
 # Pinned versions of the packages used by the tests and the Android build.
+# numpy, onnxruntime and tokenizers are the newest versions with Android arm64
+# wheels on pypi.flet.dev; newer ones exist on PyPI but not for Android.
 # Keep in sync with pyproject.toml and FLET_VERSION in
-# .github/workflows/build-apk.yml. The versions are the ones from the last
-# successful CI build.
+# .github/workflows/build-apk.yml.
 flet==1.0.4
-numpy==2.5.4
-onnxruntime==1.31.1
-tokenizers==0.23.3
+numpy==2.4.6
+onnxruntime==1.27.0
+tokenizers==0.23.1
 pymorphy3==2.0.6
 pymorphy3-dicts-ru==2.4.417150.4580142
